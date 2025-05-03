@@ -1,5 +1,5 @@
 import unittest
-from htmlnode import HTMLNode
+from htmlnode import HTMLNode, LeafNode
 
 class TestHTMLNode(unittest.TestCase):
     def test_props_to_html_no_props(self):
@@ -29,3 +29,19 @@ class TestHTMLNode(unittest.TestCase):
         self.assertIn(' href="https://www.example.com"', html)
         self.assertIn(' target="_blank"', html)
         self.assertEqual(len(html.split()), 2)  # Should have 2 attributes
+
+    def test_leaf_to_html_p(self):
+        node = LeafNode("p", "Hello, world!")
+        self.assertEqual(node.to_html(), "<p>Hello, world!</p>")
+
+        node = LeafNode("b", "Hello, world!")
+        self.assertEqual(node.to_html(), "<b>Hello, world!</b>")
+
+        node = LeafNode("i", "Hello, world!")
+        self.assertEqual(node.to_html(), "<i>Hello, world!</i>")
+
+        node = LeafNode(None, "Hello, world!")
+        self.assertEqual(node.to_html(), "Hello, world!")
+
+        node = LeafNode("a", "Click here", {"href": "https://boot.dev"})        
+        self.assertEqual(node.to_html(), '<a href="https://boot.dev">Click here</a>')

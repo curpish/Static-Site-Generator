@@ -1,5 +1,5 @@
 import unittest
-from htmlnode import HTMLNode, LeafNode, ParentNode, text_node_to_html_node
+from htmlnode import HTMLNode, LeafNode, ParentNode, text_node_to_html_node, split_nodes_delimiter
 from textnode import TextNode, TextType
 from enum import Enum
 
@@ -160,3 +160,59 @@ class TestHTMLNode(unittest.TestCase):
         self.assertEqual(html_node.value, '')  # Value should be empty for images
         self.assertEqual(html_node.props['src'], 'https://example.com/image.jpg')
         self.assertEqual(html_node.props['alt'], 'alt text')
+
+    def test_split_nodes_delimiter_none(self):
+        old_nodes = [
+            TextNode("plain text", TextType.NORMAL_TEXT),
+            TextNode("delimited text", TextType.IMAGES)
+        ]
+        delimiter = None
+        text_type = TextType.NORMAL_TEXT
+        new_nodes = split_nodes_delimiter(old_nodes, delimiter, text_type)
+        self.assertEqual(len(new_nodes), 2)
+        self.assertEqual(new_nodes[0].text, 'plain text')
+        self.assertEqual(new_nodes[1].text, 'delimited text')
+
+    def test_split_nodes_delimiter_no_delimiter(self):
+        old_nodes = [
+            TextNode("plain text", TextType.NORMAL_TEXT),
+            TextNode("plain text", TextType.NORMAL_TEXT)
+        ]
+        text_type = TextType.NORMAL_TEXT
+        delimiter = ''
+        new_nodes = split_nodes_delimiter(old_nodes, delimiter, text_type)
+        self.assertEqual(len(new_nodes), 2)
+        self.assertEqual(new_nodes[0].text, 'plain text')
+        self.assertEqual(new_nodes[1].text, 'plain text')
+    
+    def test_split_nodes_delimiter_unmatched_delimiter(self):
+        old_nodes = [
+            TextNode("plain text", TextType.NORMAL_TEXT),
+            TextNode("`delimited text", TextType.NORMAL_TEXT)
+        ]
+        delimiter = "`"
+        # test that the exception is raised!
+        with self.assertRaises(Exception):
+            split_nodes_delimiter(old_nodes, delimiter, TextType.CODE_TEXT)
+    
+    def test_split_nodes_multiple_node_types(self):
+        old_nodes = [
+            TextNode("some `code` here", TextType.NORMAL_TEXT),
+            TextNode("just plain", TextType.NORMAL_TEXT),
+            TextNode("already code", TextType.CODE_TEXT)
+        ]
+        delimiter = "`"
+        text_type = TextType.CODE_TEXT
+        new_nodes = split_nodes_delimiter(old_nodes, delimiter, text_type)
+        self.assertEqual(len(new_nodes), 5)
+        self.assertEqual(new_nodes[0].text, 'some ')
+        self.assertEqual(new_nodes[1].text, 'code')
+        self.assertEqual(new_nodes[2].text, ' here')
+        self.assertEqual(new_nodes[3].text, 'just plain')
+        self.assertEqual(new_nodes[4].text, 'already code')
+        self.assertEqual(new_nodes[0].text_type, TextType.NORMAL_TEXT)
+        self.assertEqual(new_nodes[1].text_type, TextType.CODE_TEXT)
+        self.assertEqual(new_nodes[2].text_type, TextType.NORMAL_TEXT)
+        self.assertEqual(new_nodes[3].text_type, TextType.NORMAL_TEXT)
+        self.assertEqual(new_nodes[4].text_type, TextType.CODE_TEXT)
+    

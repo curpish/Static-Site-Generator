@@ -19,6 +19,25 @@ def text_node_to_html_node(text_node):
     else:
         raise ValueError(f"Unsupported text node type: {text_node.text_type}")    
 
+def split_nodes_delimiter(old_nodes, delimiter, text_type):
+    new_nodes = []
+    for node in old_nodes:
+        if node.text_type == TextType.NORMAL_TEXT and delimiter and delimiter in node.text:
+            current_node = node.text.split(delimiter)
+            if len(current_node) > 1 and len(current_node) % 2 == 0:
+                raise Exception(f'Unmatched markdown delimiter in text node: {node.text}')
+            for idx, part in enumerate(current_node):
+                if idx % 2 == 0:
+                    # Even index: plain text
+                    node_type = TextType.NORMAL_TEXT
+                else:
+                    # Odd index: delimited text
+                    node_type = text_type
+                new_nodes.append(TextNode(part, node_type))
+        else:
+            new_nodes.append(node)
+    return new_nodes
+
 class HTMLNode:
     def __init__(self, tag=None, value=None, children=None, props=None):
         self.tag = tag

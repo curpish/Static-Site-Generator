@@ -1,5 +1,5 @@
 import unittest
-from htmlnode import HTMLNode, LeafNode, ParentNode, text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links
+from htmlnode import HTMLNode, LeafNode, ParentNode, text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image
 from textnode import TextNode, TextType
 from enum import Enum
 
@@ -255,3 +255,21 @@ class TestHTMLNode(unittest.TestCase):
         self.assertEqual(len(link_matches), 2)
         self.assertEqual(link_matches[0][0], "")  # Empty anchor text
         self.assertEqual(link_matches[1][1], "")  # Empty URL
+
+    def test_split_images(self):
+        node = TextNode(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)",
+            TextType.NORMAL_TEXT,
+        )
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(
+            [
+                TextNode("This is text with an ", TextType.NORMAL_TEXT),
+                TextNode("image", TextType.IMAGES, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" and another ", TextType.NORMAL_TEXT),
+                TextNode(
+                    "second image", TextType.IMAGES, "https://i.imgur.com/3elNhQu.png"
+                ),
+            ],
+            new_nodes,
+        )

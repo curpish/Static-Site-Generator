@@ -65,6 +65,46 @@ def extract_markdown_links(text):
         links.append((anchor_text, src_url))
     return links
 
+
+# Make use of the extraction functions we wrote
+#If there are no images or links respectively, just return a list with the original TextNode in it
+#Don't append any TextNodes that have empty text to the final list
+#Your split_nodes_image and split_nodes_link functions will be very similar. 
+#You can try to share code between them if you want, but I was a copy/paste grug dev for this step.
+#You can use the .split() method with large strings as the delimiter, and it has an optional second 
+# "maxsplits" parameter, which you can set to 1 if you only want to split the string once at most. 
+#For each image extracted from the text, I split the text before and after the image markdown. 
+# For example:
+# sections = original_text.split(f"![{image_alt}]({image_link})", 1)
+
+def split_nodes_image(old_nodes):
+    new_nodes = []
+    for node in old_nodes:
+        text=node.text
+        images = extract_markdown_images(text)
+        while images:
+            image_alt, image_link = images[0]
+            #Add a TextNode for the text before the image (if it's not empty).
+            ## If the text before the image is empty, skip it.
+            # Add a TextNode for the image, using the alt and url you extracted.
+           ##Then continue, letting sections[1] (the text after the image) become your new text to process.
+            sections = text.split(f"![{image_alt}]({image_link})", 1)
+            if sections[0] != "":
+                new_nodes.append(TextNode(sections[0], TextType.NORMAL_TEXT))
+            new_nodes.append(TextNode(image_alt, TextType.IMAGES, image_link))
+            if len(sections) > 1:
+                text = sections[1]
+                images = extract_markdown_images(text)
+            else:
+                break
+        if text != "":
+            new_nodes.append(TextNode(text, TextType.NORMAL_TEXT))
+
+    return new_nodes
+
+
+            
+
 class HTMLNode:
     def __init__(self, tag=None, value=None, children=None, props=None):
         self.tag = tag

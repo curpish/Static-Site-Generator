@@ -1,5 +1,6 @@
 from textnode import TextNode, TextType
 
+
 def text_node_to_html_node(text_node):
     if not isinstance(text_node, TextNode):
         raise ValueError(f"Expected TextNode, got {type(text_node)}")
@@ -37,6 +38,32 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
         else:
             new_nodes.append(node)
     return new_nodes
+
+def extract_markdown_images(text):
+    #takes raw markdown text and returns a list of tuples. 
+    #Each tuple should contain the alt text and the URL of any markdown images. 
+    import re
+    pattern = r"!\[([^\[\]]*)\]\(([^\(\)]*)\)"
+    matches = re.findall(pattern, text)
+    images = []
+    for match in matches:
+        alt_text = match[0]
+        src_url = match[1]
+        images.append((alt_text, src_url))
+    return images
+
+def extract_markdown_links(text):
+    #extracts markdown links instead of images. 
+    #It should return tuples of anchor text and URLs.
+    import re
+    pattern = r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
+    matches = re.findall(pattern, text)
+    links = []
+    for match in matches:
+        anchor_text = match[0]
+        src_url = match[1]
+        links.append((anchor_text, src_url))
+    return links
 
 class HTMLNode:
     def __init__(self, tag=None, value=None, children=None, props=None):

@@ -1,5 +1,5 @@
 import unittest
-from htmlnode import HTMLNode, LeafNode, ParentNode, text_node_to_html_node, split_nodes_delimiter
+from htmlnode import HTMLNode, LeafNode, ParentNode, text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links
 from textnode import TextNode, TextType
 from enum import Enum
 
@@ -215,4 +215,43 @@ class TestHTMLNode(unittest.TestCase):
         self.assertEqual(new_nodes[2].text_type, TextType.NORMAL_TEXT)
         self.assertEqual(new_nodes[3].text_type, TextType.NORMAL_TEXT)
         self.assertEqual(new_nodes[4].text_type, TextType.CODE_TEXT)
+
+    def test_extract_markdown_images(self):
+        matches = extract_markdown_images(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png)"
+        )
+        self.assertListEqual([("image", "https://i.imgur.com/zjjcJKZ.png")], matches)
+
+    def test_extract_markdown_links(self):
+        matches = extract_markdown_links(
+            "This is text with a [link](https://www.example.com)"
+        )
+        self.assertListEqual([("link", "https://www.example.com")], matches)
     
+    def test_extract_markdown_many_images_and_links(self):
+        #tests both functions separately
+        markdown_text = """
+        This is some text with an ![image](https://i.imgur.com/zjjcJKZ.png) and a [link](https://www.example.com).
+        Another line with another image ![image2](https://i.imgur.com/abcdeFGH.png) and link [another link](https://example.org).
+        """
+        matches = extract_markdown_images(markdown_text)
+        self.assertEqual(len(matches), 2)
+        matches = extract_markdown_links(markdown_text)
+        self.assertEqual(len(matches), 2)
+    
+    def test_extract_markdown_images_and_links_with_empty_alt_text_or_urls(self):
+        # Handle edge cases like empty alt text or URLs
+        markdown_text = """
+        This is some text with an ![](https://i.imgur.com/empty-alt.png) and a [](https://www.empty-anchor.com).
+        Another line with another image ![image2]() and link [another link]().
+        """
+        
+        image_matches = extract_markdown_images(markdown_text)
+        self.assertEqual(len(image_matches), 2)
+        self.assertEqual(image_matches[0][0], "")  # Empty alt text
+        self.assertEqual(image_matches[1][1], "")  # Empty URL
+        
+        link_matches = extract_markdown_links(markdown_text)
+        self.assertEqual(len(link_matches), 2)
+        self.assertEqual(link_matches[0][0], "")  # Empty anchor text
+        self.assertEqual(link_matches[1][1], "")  # Empty URL

@@ -1,5 +1,5 @@
 import unittest
-from htmlnode import HTMLNode, LeafNode, ParentNode, text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link
+from htmlnode import HTMLNode, LeafNode, ParentNode, text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnodes
 from textnode import TextNode, TextType
 from enum import Enum
 
@@ -296,7 +296,6 @@ class TestHTMLNode(unittest.TestCase):
             TextType.NORMAL_TEXT
         )
         new_nodes = split_nodes_link([node])
-        print(new_nodes)
         self.assertListEqual(
             [
                 TextNode("These are multiple links side by side: ", TextType.NORMAL_TEXT),
@@ -306,3 +305,76 @@ class TestHTMLNode(unittest.TestCase):
             new_nodes,
         )
         
+
+    def test_text_to_textnodes(self):
+        # Test a complex markdown string with multiple elements
+        markdown = "This is **text** with an _italic_ word and a `code block` and an ![image](https://example.com/image.jpg) and a [link](https://example.com)"
+        
+        nodes = text_to_textnodes(markdown)
+        
+        # Check that we got the expected number of nodes
+        self.assertEqual(10, len(nodes))
+        
+        # Check each node has the correct type and content
+        self.assertEqual(TextType.NORMAL_TEXT, nodes[0].text_type)
+        self.assertEqual("This is ", nodes[0].text)
+        
+        self.assertEqual(TextType.BOLD_TEXT, nodes[1].text_type)
+        self.assertEqual("text", nodes[1].text)
+        
+        self.assertEqual(TextType.NORMAL_TEXT, nodes[2].text_type)
+        self.assertEqual(" with an ", nodes[2].text)
+        
+        self.assertEqual(TextType.ITALIC_TEXT, nodes[3].text_type)
+        self.assertEqual("italic", nodes[3].text)
+        
+        self.assertEqual(TextType.NORMAL_TEXT, nodes[4].text_type)
+        self.assertEqual(" word and a ", nodes[4].text)
+        
+        self.assertEqual(TextType.CODE_TEXT, nodes[5].text_type)
+        self.assertEqual("code block", nodes[5].text)
+        
+        self.assertEqual(TextType.NORMAL_TEXT, nodes[6].text_type)
+        self.assertEqual(" and an ", nodes[6].text)
+
+    def test_text_to_textnodes(self):
+        # Test a complex markdown string with multiple elements
+        markdown = "This is **text** with an _italic_ word and a `code block` and an ![image](https://example.com/image.jpg) and a [link](https://example.com)"
+        
+        nodes = text_to_textnodes(markdown)
+        
+        # Check that we got the expected number of nodes
+        self.assertEqual(10, len(nodes))
+        
+        # Check each node has the correct type and content
+        self.assertEqual(TextType.NORMAL_TEXT, nodes[0].text_type)
+        self.assertEqual("This is ", nodes[0].text)
+        
+        self.assertEqual(TextType.BOLD_TEXT, nodes[1].text_type)
+        self.assertEqual("text", nodes[1].text)
+        
+        self.assertEqual(TextType.NORMAL_TEXT, nodes[2].text_type)
+        self.assertEqual(" with an ", nodes[2].text)
+        
+        self.assertEqual(TextType.ITALIC_TEXT, nodes[3].text_type)
+        self.assertEqual("italic", nodes[3].text)
+        
+        self.assertEqual(TextType.NORMAL_TEXT, nodes[4].text_type)
+        self.assertEqual(" word and a ", nodes[4].text)
+        
+        self.assertEqual(TextType.CODE_TEXT, nodes[5].text_type)
+        self.assertEqual("code block", nodes[5].text)
+        
+        self.assertEqual(TextType.NORMAL_TEXT, nodes[6].text_type)
+        self.assertEqual(" and an ", nodes[6].text)
+    
+    def test_nested_formatting(self):
+        # This tests how your parser handles nested formatting
+        markdown = "This has **bold with _italic_ inside**"
+        nodes = text_to_textnodes(markdown)
+        # Check the expected behavior based on your implementation
+        # One possible outcome:
+        self.assertEqual(3, len(nodes))
+        self.assertEqual("This has ", nodes[0].text)
+        self.assertEqual(TextType.BOLD_TEXT, nodes[1].text_type)
+        self.assertEqual("bold with _italic_ inside", nodes[1].text)

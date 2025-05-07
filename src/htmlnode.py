@@ -66,17 +66,6 @@ def extract_markdown_links(text):
     return links
 
 
-# Make use of the extraction functions we wrote
-#If there are no images or links respectively, just return a list with the original TextNode in it
-#Don't append any TextNodes that have empty text to the final list
-#Your split_nodes_image and split_nodes_link functions will be very similar. 
-#You can try to share code between them if you want, but I was a copy/paste grug dev for this step.
-#You can use the .split() method with large strings as the delimiter, and it has an optional second 
-# "maxsplits" parameter, which you can set to 1 if you only want to split the string once at most. 
-#For each image extracted from the text, I split the text before and after the image markdown. 
-# For example:
-# sections = original_text.split(f"![{image_alt}]({image_link})", 1)
-
 def split_nodes_image(old_nodes):
     new_nodes = []
     for node in old_nodes:
@@ -95,7 +84,6 @@ def split_nodes_image(old_nodes):
                 break
         if text != "":
             new_nodes.append(TextNode(text, TextType.NORMAL_TEXT))
-
     return new_nodes
 
 def split_nodes_link(old_nodes):
@@ -117,6 +105,20 @@ def split_nodes_link(old_nodes):
         if text != "":
             new_nodes.append(TextNode(text, TextType.NORMAL_TEXT))
     return new_nodes
+
+def text_to_textnodes(text):
+    nodes = [TextNode(text, TextType.NORMAL_TEXT)]
+    
+    # First handle image and link markdown (more complex patterns)
+    nodes = split_nodes_image(nodes)
+    nodes = split_nodes_link(nodes)
+    
+    # Then handle the simpler delimiter-based formatting
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD_TEXT)
+    nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC_TEXT)
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE_TEXT)
+    
+    return nodes
 
 
             

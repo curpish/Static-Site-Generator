@@ -84,10 +84,6 @@ def split_nodes_image(old_nodes):
         images = extract_markdown_images(text)
         while images:
             image_alt, image_link = images[0]
-            #Add a TextNode for the text before the image (if it's not empty).
-            ## If the text before the image is empty, skip it.
-            # Add a TextNode for the image, using the alt and url you extracted.
-           ##Then continue, letting sections[1] (the text after the image) become your new text to process.
             sections = text.split(f"![{image_alt}]({image_link})", 1)
             if sections[0] != "":
                 new_nodes.append(TextNode(sections[0], TextType.NORMAL_TEXT))
@@ -100,6 +96,26 @@ def split_nodes_image(old_nodes):
         if text != "":
             new_nodes.append(TextNode(text, TextType.NORMAL_TEXT))
 
+    return new_nodes
+
+def split_nodes_link(old_nodes):
+    new_nodes = []
+    for node in old_nodes:
+        text=node.text
+        link = extract_markdown_links(text)
+        while link:
+            link_anchor, link_url = link[0]
+            sections = text.split(f"[{link_anchor}]({link_url})", 1)
+            if sections[0] != "":
+                new_nodes.append(TextNode(sections[0], TextType.NORMAL_TEXT))
+            new_nodes.append(TextNode(link_anchor, TextType.LINKS, link_url))
+            if len(sections) > 1:
+                text = sections[1]
+                link = extract_markdown_links(text)
+            else:
+                break
+        if text != "":
+            new_nodes.append(TextNode(text, TextType.NORMAL_TEXT))
     return new_nodes
 
 

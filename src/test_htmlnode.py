@@ -1,5 +1,5 @@
 import unittest
-from htmlnode import HTMLNode, LeafNode, ParentNode, text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image
+from htmlnode import HTMLNode, LeafNode, ParentNode, text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link
 from textnode import TextNode, TextType
 from enum import Enum
 
@@ -273,3 +273,36 @@ class TestHTMLNode(unittest.TestCase):
             ],
             new_nodes,
         )
+    
+    def test_split_links(self):
+        node = TextNode(
+            "This is text with a [link](https://example.com) and another [another link](https://example.org)",
+            TextType.NORMAL_TEXT,
+        )
+        new_nodes = split_nodes_link([node])
+        self.assertListEqual(
+            [
+                TextNode("This is text with a ", TextType.NORMAL_TEXT),
+                TextNode("link", TextType.LINKS, "https://example.com"),
+                TextNode(" and another ", TextType.NORMAL_TEXT),
+                TextNode("another link", TextType.LINKS, "https://example.org"),
+            ],
+            new_nodes,
+        )
+
+    def test_split_multiple_links_side_by_side(self):
+        node = TextNode(
+            "These are multiple links side by side: [link1](https://example.com/link1)[link2](https://example.com/link2)",
+            TextType.NORMAL_TEXT
+        )
+        new_nodes = split_nodes_link([node])
+        print(new_nodes)
+        self.assertListEqual(
+            [
+                TextNode("These are multiple links side by side: ", TextType.NORMAL_TEXT),
+                TextNode("link1", TextType.LINKS, "https://example.com/link1"),   
+                TextNode("link2", TextType.LINKS, "https://example.com/link2"),
+            ],
+            new_nodes,
+        )
+        

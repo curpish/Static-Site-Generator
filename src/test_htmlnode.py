@@ -1,5 +1,5 @@
 import unittest
-from htmlnode import HTMLNode, LeafNode, ParentNode, text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnodes
+from htmlnode import HTMLNode, LeafNode, ParentNode, text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnodes, markdown_to_blocks
 from textnode import TextNode, TextType
 from enum import Enum
 
@@ -378,3 +378,53 @@ class TestHTMLNode(unittest.TestCase):
         self.assertEqual("This has ", nodes[0].text)
         self.assertEqual(TextType.BOLD_TEXT, nodes[1].text_type)
         self.assertEqual("bold with _italic_ inside", nodes[1].text)
+
+    def test_markdown_to_blocks(self):
+            md = """
+    This is **bolded** paragraph
+
+    This is another paragraph with _italic_ text and `code` here
+    This is the same paragraph on a new line
+
+    - This is a list
+    - with items
+    """
+            blocks = markdown_to_blocks(md)
+            self.assertEqual(
+                blocks,
+                [
+                    "This is **bolded** paragraph",
+                    "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line",
+                    "- This is a list\n- with items",
+                ],
+            )
+            
+    def test_empty_string(self):
+        md = ""
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, [])
+
+    def test_only_whitespace(self):
+        md = "   \n   \n   "
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, [])
+
+    def test_multiple_consecutive_newlines(self):
+        md = "First block\n\n\n\nSecond block"
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, ["First block", "Second block"])
+
+    def test_trailing_newlines(self):
+        md = "Some content\n\n"
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, ["Some content"])
+
+    def test_leading_newlines(self):
+        md = "\n\nSome content"
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, ["Some content"])
+
+    def test_single_line(self):
+        md = "Just one line with no newlines"
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, ["Just one line with no newlines"])    

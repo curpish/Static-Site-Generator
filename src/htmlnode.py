@@ -120,8 +120,27 @@ def text_to_textnodes(text):
     
     return nodes
 
-
+def markdown_to_blocks(markdown):
+    # First strip the entire markdown string
+    markdown = markdown.strip()
+    
+    blocks = []
+    # Split by double newlines
+    for block in markdown.split('\n\n'):
+        # Skip empty blocks
+        if block.strip() == '':
+            continue
             
+        # Process lines within the block
+        lines = block.split('\n')
+        cleaned_lines = []
+        for line in lines:
+            cleaned_lines.append(line.strip())
+        
+        # Join the cleaned lines and add to blocks
+        blocks.append('\n'.join(cleaned_lines))
+    
+    return blocks            
 
 class HTMLNode:
     def __init__(self, tag=None, value=None, children=None, props=None):

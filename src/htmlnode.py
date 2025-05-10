@@ -1,4 +1,22 @@
 from textnode import TextNode, TextType
+from blocktype import BlockType, block_to_block_type
+
+def markdown_to_html_node(markdown):
+    blocks = markdown_to_blocks(markdown)
+    html_node_child = []
+    for block in blocks:
+       block_type = block_to_block_type(block)
+       html_node_child.append(block_with_type_to_html_node(block, block_type))
+
+
+    return html_node    
+
+def block_with_type_to_html_node(block, block_type):
+    
+    if block_type == BlockType.PARAGRAPH:
+
+
+
 
 
 def text_node_to_html_node(text_node):

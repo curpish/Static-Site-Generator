@@ -428,3 +428,6 @@ class TestHTMLNode(unittest.TestCase):
         md = "Just one line with no newlines"
         blocks = markdown_to_blocks(md)
         self.assertEqual(blocks, ["Just one line with no newlines"])    
+    
+if __name__ == "__main__":
+    unittest.main()

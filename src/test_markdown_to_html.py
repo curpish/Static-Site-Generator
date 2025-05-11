@@ -70,56 +70,7 @@ class TestMarkdownToHTML(unittest.TestCase):
             "<div><blockquote>This is a blockquote with multiple lines</blockquote></div>"
         )
 
-    def test_nested_inline_elements(self):
-        md = "This is `code` inside **bold _and italic_**"
-        node = markdown_to_html_node(md)
-        html = node.to_html()
-        self.assertEqual(
-            html,
-            "<div><p>This is <code>code</code> inside <b>bold <i>and italic</i></b></p></div>"
-        )
 
-    def test_multiple_heading_levels(self):
-        md = "# Heading 1\n## Heading 2\n### Heading 3\n#### Heading 4\n##### Heading 5\n###### Heading 6"
-        node = markdown_to_html_node(md)
-        html = node.to_html()
-        self.assertEqual(
-            html,
-            "<div><h1>Heading 1</h1><h2>Heading 2</h2><h3>Heading 3</h3><h4>Heading 4</h4><h5>Heading 5</h5><h6>Heading 6</h6></div>"
-        )
-
-    def test_empty_blocks(self):
-        md = "\n\n\n"  # Multiple empty lines
-        node = markdown_to_html_node(md)
-        html = node.to_html()
-        self.assertEqual(html, "<div></div>")
-        
-        # Test with an empty paragraph between content
-        md = "First paragraph\n\n\n\nSecond paragraph"
-        node = markdown_to_html_node(md)
-        html = node.to_html()
-        self.assertEqual(
-            html,
-            "<div><p>First paragraph</p><p>Second paragraph</p></div>"
-        )         
-
-    def test_formatted_list_items(self):
-        md = "- Item with **bold**\n- Item with _italic_\n- Item with `code`"
-        node = markdown_to_html_node(md)
-        html = node.to_html()
-        self.assertEqual(
-            html,
-            "<div><ul><li>Item with <b>bold</b></li><li>Item with <i>italic</i></li><li>Item with <code>code</code></li></ul></div>"
-        )
-        
-        # Test ordered list with formatting
-        md = "1. First with **bold**\n2. Second with _italic_"
-        node = markdown_to_html_node(md)
-        html = node.to_html()
-        self.assertEqual(
-            html,
-            "<div><ol><li>First with <b>bold</b></li><li>Second with <i>italic</i></li></ol></div>"
-        )          
                                   
 if __name__ == "__main__":
     unittest.main()

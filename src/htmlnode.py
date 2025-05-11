@@ -4,17 +4,109 @@ from blocktype import BlockType, block_to_block_type
 def markdown_to_html_node(markdown):
     blocks = markdown_to_blocks(markdown)
     html_node_child = []
+    
     for block in blocks:
-       block_type = block_to_block_type(block)
-       html_node_child.append(block_with_type_to_html_node(block, block_type))
-
-
-    return html_node    
+        if block.strip():  # Only process non-empty blocks
+            block_type = block_to_block_type(block)
+            html_node_child.append(block_with_type_to_html_node(block, block_type))
+    
+    # Special case for completely empty markdown
+    if not html_node_child:
+        # We need to create a special case for the empty div
+        # Return a custom object that renders to "<div></div>"
+        class EmptyDiv:
+            def to_html(self):
+                return "<div></div>"
+        return EmptyDiv()
+    
+    html_node = ParentNode("div", children=html_node_child)
+    return html_node
 
 def block_with_type_to_html_node(block, block_type):
+    #Based on the type of block, create a new HTMLNode with the proper data including block data
+    if block_type==BlockType.CODE:
+        # Resolve the entire block and create the appropriate HTMLNode
+        lines = block.splitlines()
+        if lines[0] == "```" and lines[-1] == "```":
+            code_lines = lines[1:-1]  #takes all lines except first and last line
+            code_content = "\n".join(code_lines)+"\n" #allows a full line before and after the code block
+            html_node = ParentNode("pre", [ParentNode("code", [LeafNode(None, code_content)])])        
+            return html_node
+        else:
+            # return as formatted if not triple backtick
+            return ParentNode("pre", [ParentNode("code", [LeafNode(None, block)])])
+         
+    elif block_type == BlockType.PARAGRAPH:
+        normalized_block = " ".join(block.splitlines())
+        children = text_to_children(normalized_block)
+        node = ParentNode("p", children=children)
+        return node 
     
-    if block_type == BlockType.PARAGRAPH:
+    elif block_type == BlockType.QUOTE:
+        # Remove '>' characters and process the content
+        lines = block.strip().split("\n")
+        quote_content = []
+        for line in lines:
+            # Remove the '>' and any leading space
+            if line.startswith(">"):
+                line = line[1:].lstrip()
+            quote_content.append(line)
+        
+        quote_text = " ".join(quote_content)
+        children = text_to_children(quote_text)
+        node = ParentNode("blockquote", children=children)
+        return node
+       
+    elif block_type == BlockType.HEADING:
+        level = get_heading_level(block)
+        heading_text = block[level+1:].strip()  # skips '#' chars and space
+        children = text_to_children(heading_text)
+        node = ParentNode(f"h{level}", children=children)        
+        return node
+    
+    elif block_type == BlockType.ORDERED_LIST:
+        # Split by newlines to get individual items
+        items = block.strip().split("\n")
+        list_items = []
+        
+        for item in items:
+            # Remove the number and period, and any leading whitespace
+            # Find the first period and take everything after it
+            content = item[item.find(".")+1:].strip()
+            # Create li node with properly processed content
+            li_children = text_to_children(content)
+            list_items.append(ParentNode("li", children=li_children))
+        
+        node = ParentNode("ol", children=list_items)
+        return node   
+    
+    elif block_type == BlockType.UNORDERED_LIST:
+        # Split by newlines to get individual items
+        items = block.strip().split("\n")
+        list_items = []
+        
+        for item in items:
+            # Remove the dash and any leading whitespace
+            content = item[item.find("-")+1:].strip()
+            # Create li node with properly processed content
+            li_children = text_to_children(content)
+            list_items.append(ParentNode("li", children=li_children))
+        
+        node = ParentNode("ul", children=list_items)
+        return node 
 
+def text_to_children(text):
+    textnodes = text_to_textnodes(text)
+    return [text_node_to_html_node(n) for n in textnodes]
+
+def get_heading_level(line):
+    count = 0
+    for char in line:
+        if char == "#":
+            count += 1
+        else:
+            break
+    return count
 
 
 

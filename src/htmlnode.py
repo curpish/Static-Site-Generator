@@ -178,22 +178,47 @@ def extract_markdown_links(text):
 
 def split_nodes_image(old_nodes):
     new_nodes = []
-    for node in old_nodes:
-        text=node.text
+    for old_node in old_nodes:
+        # Only process NORMAL_TEXT nodes
+        if old_node.text_type != TextType.NORMAL_TEXT:
+            new_nodes.append(old_node)
+            continue
+            
+        text = old_node.text
+        current_index = 0
+        remaining_text = text
+        
+        # Find all image markdown in the text
         images = extract_markdown_images(text)
-        while images:
-            image_alt, image_link = images[0]
-            sections = text.split(f"![{image_alt}]({image_link})", 1)
-            if sections[0] != "":
-                new_nodes.append(TextNode(sections[0], TextType.NORMAL_TEXT))
-            new_nodes.append(TextNode(image_alt, TextType.IMAGES, image_link))
-            if len(sections) > 1:
-                text = sections[1]
-                images = extract_markdown_images(text)
-            else:
-                break
-        if text != "":
-            new_nodes.append(TextNode(text, TextType.NORMAL_TEXT))
+        
+        if not images:
+            new_nodes.append(old_node)
+            continue
+            
+        for image_alt, image_url in images:
+            # Find the full image markdown
+            image_markdown = f"![{image_alt}]({image_url})"
+            image_index = text.find(image_markdown, current_index)
+            
+            if image_index == -1:
+                continue  # Skip if not found
+                
+            # Add text before the image
+            if image_index > current_index:
+                prefix_text = text[current_index:image_index]
+                if prefix_text:
+                    new_nodes.append(TextNode(prefix_text, TextType.NORMAL_TEXT))
+            
+            # Add the image node
+            new_nodes.append(TextNode(image_alt, TextType.IMAGES, image_url))
+            
+            # Update current index for next iteration
+            current_index = image_index + len(image_markdown)
+        
+        # Add any remaining text after the last image
+        if current_index < len(text):
+            new_nodes.append(TextNode(text[current_index:], TextType.NORMAL_TEXT))
+            
     return new_nodes
 
 def split_nodes_link(old_nodes):
@@ -286,7 +311,6 @@ class LeafNode(HTMLNode):
         super().__init__(tag=tag, value=value, children=None, props=props)
     
     def to_html(self):
-        # You already check for value in the constructor, but you could add another check here
         if self.value is None:
             raise ValueError("LeafNode must have a value")
         
@@ -294,8 +318,12 @@ class LeafNode(HTMLNode):
         if self.tag is None:
             return self.value
         
-        # Otherwise, render a proper HTML tag with properties
+        # Handle self-closing tags like <img>
         props_html = self.props_to_html()
+        if self.tag == "img":
+            return f"<{self.tag}{props_html}>"
+        
+        # For regular tags, include opening and closing tags
         return f"<{self.tag}{props_html}>{self.value}</{self.tag}>"
     
 class ParentNode(HTMLNode):

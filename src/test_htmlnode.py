@@ -428,6 +428,20 @@ class TestHTMLNode(unittest.TestCase):
         md = "Just one line with no newlines"
         blocks = markdown_to_blocks(md)
         self.assertEqual(blocks, ["Just one line with no newlines"])    
+
+    def test_split_image(self):
+        node = TextNode(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png)",
+            TextType.NORMAL_TEXT,
+        )
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(
+            [
+                TextNode("This is text with an ", TextType.NORMAL_TEXT),
+                TextNode("image", TextType.IMAGES, "https://i.imgur.com/zjjcJKZ.png"),
+            ],
+            new_nodes,
+        )
     
 if __name__ == "__main__":
     unittest.main()
